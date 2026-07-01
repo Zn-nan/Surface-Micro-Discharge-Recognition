@@ -35,7 +35,8 @@ https://doi.org/10.21227/ecye-se77
 `-- src/
     `-- smd_recognition/
         |-- __init__.py
-        `-- dataset.py
+        |-- dataset.py
+        `-- shufflenetv2.py
 ```
 
 ## Requirements
