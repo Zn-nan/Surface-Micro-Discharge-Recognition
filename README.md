@@ -91,6 +91,33 @@ scikit-learn
 pillow
 ```
 
+## Quick Start
+
+Clone this repository and install the dependencies:
+
+```bash
+git clone https://github.com/Zn-nan/Surface-Micro-Discharge-Recognition.git
+cd Surface-Micro-Discharge-Recognition
+pip install -r requirements.txt
+```
+
+Download the dataset from IEEE DataPort and place the TFRecord files under:
+
+```text
+SMD_data/SMD_TFRecord/
+```
+
+Before running the scripts, check local paths in `src/smd/config.py` and, if needed, update the path variables inside `scripts/*.py`.
+
+Run the workflow:
+
+```bash
+python scripts/preview_tfrecord.py
+python scripts/train.py
+python scripts/export_tflite.py
+python scripts/evaluate.py
+```
+
 ## Usage
 
 Create TFRecords:
