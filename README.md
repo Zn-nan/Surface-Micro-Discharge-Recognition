@@ -1,6 +1,6 @@
-# SMD Visible-Light Image Recognition
+# Surface Micro-Discharge Recognition
 
-This repository provides the source code for surface micro-discharge (SMD) mode recognition using visible-light discharge images and lightweight deep learning models.
+Source code for surface micro-discharge (SMD) mode recognition using visible-light discharge images and lightweight deep learning models.
 
 ## Paper
 
@@ -12,50 +12,33 @@ The dataset is publicly available on IEEE DataPort:
 
 https://doi.org/10.21227/ecye-se77
 
-## Repository Structure
+## Structure
 
 ```text
-SMD-Visible-Image-Recognition/
-│
-├── README.md
-├── LICENSE
-├── requirements.txt
-├── train.py
-├── test.py
-├── export_tflite.py
-├── predict.py
-│
-├── models/
-│   ├── ShuffleNetV2.py
-│   ├── layers.py
-│   └── __init__.py
-│
-├── utils/
-│   ├── dataloader.py
-│   ├── metrics.py
-│   ├── losses.py
-│   └── visualization.py
-│
-├── deployment/
-│   ├── tflite/
-│   └── microcontroller/
-│
-├── examples/
-│   ├── demo.jpg
-│   ├── result.jpg
-│   └── inference_demo.py
-│
-├── docs/
-│   ├── figures/
-│   └── model_architecture.png
-│
-└── datasets/
-    └── DataPort_DOI.txt
+.
+|-- README.md
+|-- requirements.txt
+|-- datasets/
+|   `-- DataPort_DOI.txt
+|-- device/
+|   |-- openmv_image_classification.py
+|   `-- openmv_my_LCD.py
+|-- models/
+|   |-- ShuffleNetV2_model-litemodel20260624-9936-9853.tflite
+|   `-- ShuffleNetV2_model_checkpoint_SMD_150_Augmented_20260624-9936.h5
+|-- scripts/
+|   |-- create_tfrecord_augmented.py
+|   |-- evaluate_roc_curve.py
+|   |-- quantize_shufflenetv2.py
+|   |-- read_tfrecord_demo.py
+|   `-- train_shufflenetv2.py
+`-- src/
+    `-- smd_recognition/
+        |-- __init__.py
+        `-- dataset.py
 ```
 
 ## Requirements
-
-Install dependencies using:
 
 ```bash
 pip install -r requirements.txt
@@ -63,30 +46,31 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Training
+Create TFRecords:
 
 ```bash
-python train.py
+python scripts/create_tfrecord_augmented.py
 ```
 
-### Testing
+Train ShuffleNetV2:
 
 ```bash
-python test.py
+python scripts/train_shufflenetv2.py
 ```
 
-### TensorFlow Lite Export
+Quantize and export TensorFlow Lite:
 
 ```bash
-python export_tflite.py
+python scripts/quantize_shufflenetv2.py
 ```
 
-### Inference
+Evaluate ROC curve:
 
 ```bash
-python predict.py
+python scripts/evaluate_roc_curve.py
 ```
 
 ## Notes
 
-Please place the dataset according to the instructions in `datasets/DataPort_DOI.txt`.
+Download the dataset from IEEE DataPort and place local data according to `datasets/DataPort_DOI.txt`.
+The scripts were converted from the original Jupyter notebooks; edit local paths before running on a new machine.
