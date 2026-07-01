@@ -1,7 +1,9 @@
-Dataset:
-https://doi.org/10.21227/ecye-se77
+Dataset DOI:
+10.21227/ecye-se77
+
+Dataset link:
+https://dx.doi.org/10.21227/ecye-se77
 
 Download the dataset from IEEE DataPort and place local TFRecord files under:
 
 SMD_data/SMD_TFRecord/
-

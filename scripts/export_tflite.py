@@ -1,3 +1,10 @@
+"""
+文件功能：加载训练好的 ShuffleNetV2 模型，并导出 full-int8 TensorFlow Lite 模型。
+代码分布：先准备代表性校准数据，再加载 Keras 模型权重，最后执行 TFLite 量化和简单推理检查。
+整理思路：复用 src/smd/shufflenetv2.py 中的模型定义，保证训练模型和量化模型结构一致。
+使用方法：确认 models 目录中已有 .h5 权重文件后，运行 python scripts/export_tflite.py。
+"""
+
 # Converted from 20260624_Model_quantization-shufflenetv2.ipynb
 # Edit paths before running on a new machine.
 
@@ -130,7 +137,7 @@ from pathlib import Path
 import sys
 
 sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-from smd_recognition.shufflenetv2 import ShuffleNet
+from smd.shufflenetv2 import ShuffleNet
 
 # %% Cell 6
 #%% ??????? ShuffleNet ??

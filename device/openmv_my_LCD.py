@@ -1,4 +1,11 @@
 """
+文件功能：OpenMV 外接 LCD 屏幕驱动，用于初始化屏幕并显示摄像头图像。
+代码分布：前半部分定义引脚、屏幕方向和颜色常量，中间封装 SPI 写命令/数据，后半部分提供 LCDinit 和 display。
+整理思路：保持为设备端独立驱动文件，供 openmv_image_classification.py 直接 import。
+使用方法：与 OpenMV 主程序放在同一目录，主程序调用 LCDinit() 和 display(img)。
+"""
+
+"""
 Created on Thu Dec  1 16:48:44 2022
 @author: Zn
 OpenMV lcd模块 驱动自己的LCD屏

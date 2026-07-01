@@ -1,3 +1,10 @@
+"""
+文件功能：训练 ShuffleNetV2 表面微放电图像分类模型。
+代码分布：先读取 TFRecord 数据集，再从 src/smd/shufflenetv2.py 构建模型，最后训练、保存权重并绘制训练曲线。
+整理思路：模型结构只在 src/smd/shufflenetv2.py 定义一次；本文件只保留训练主流程，便于复现实验。
+使用方法：确认 SMD_data/SMD_TFRecord 下已有训练和测试 TFRecord 后，运行 python scripts/train.py。
+"""
+
 # Converted from 20260624ShuffleNetv2-train.ipynb
 # Edit paths before running on a new machine.
 
@@ -8,70 +15,30 @@ import cv2 as cv
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+from pathlib import Path
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+from smd.dataset import read_tfrecord
+
 
 # %% Cell 2
-## 读取 TFRecord 文件
-# tfrecord_filename_train_Original = 'SMD_data/SMD_TFRecord/image_SMD_150_train_20241209.tfrecords'
+# 读取 TFRecord 文件；解析逻辑统一放在 src/smd/dataset.py。
 tfrecord_filename_train_Augmented = 'SMD_data/SMD_TFRecord/image_SMD_150_train_20241209_Augmented.tfrecords'
 tfrecord_filename_test = 'SMD_data/SMD_TFRecord/image_SMD_150_test_20241209.tfrecords'
 batch_size = 32*4
 num_samples = 3926*2*8
 train_size = int(3926*0.6*2*8)
 val_size = int(3926*0.2*2*8)
-# Create a dictionary describing the features.
-def _parse_function(example_proto):
 
-    feature_description = {
-        'height': tf.io.FixedLenFeature([], tf.int64),
-        'width': tf.io.FixedLenFeature([], tf.int64),
-        'channel': tf.io.FixedLenFeature([], tf.int64),
-        'label': tf.io.FixedLenFeature([], tf.int64),
-        'image_raw': tf.io.FixedLenFeature([], tf.string),
-    }
-    features = tf.io.parse_single_example(example_proto, feature_description)
-    #image = tf.io.decode_jpeg(features['image_raw'], channels=3)
-    image_raw = tf.io.decode_raw(features["image_raw"], out_type=tf.uint8)
-    image_raw = tf.cast(image_raw, tf.float32) 
-    height = features["height"]
-    width = features["width"]
-    channel = features["channel"]
-# 我们将数据转化为 bytes, 再转化为张量, 会转化为一个 1维数据
-# 这里提前保存 shape 信息，转化回来
-    image_raw = tf.reshape(image_raw, [height, width, channel])
-    label = features["label"]
-    image_raw = tf.cast(image_raw,tf.float32)/255.0
-    label = tf.cast(label, tf.int32)
-    label = tf.convert_to_tensor(label) # 转换成张量
-    label = tf.one_hot(label, depth=2) #one-hot
-    return image_raw, label
-# raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_train_Original)
-# parsed_image_dataset = raw_image_dataset.map(_parse_function)
-# train_val_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-# #train_val_dataset = train_val_dataset.shuffle(buffer_size=(train_size+val_size), seed=42)
-# train_dataset = train_val_dataset.take(train_size).cache()
-# val_dataset = train_val_dataset.skip(train_size).take(val_size).cache()
-raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_train_Augmented)
-parsed_image_dataset = raw_image_dataset.map(_parse_function)
-train_val_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-train_dataset = train_val_dataset.take(train_size).cache()
-val_dataset = train_val_dataset.skip(train_size).take(val_size).cache()
-raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_test)
-parsed_image_dataset = raw_image_dataset.map(_parse_function)
-test_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-
-train_dataset = train_dataset.batch(batch_size)
-val_dataset = val_dataset.batch(batch_size)
-test_dataset = test_dataset.batch(batch_size)
-# for image_features in train_dataset:
-#     print(image_features)
+train_val_dataset = read_tfrecord(tfrecord_filename_train_Augmented).shuffle(buffer_size=100000, seed=42)
+train_dataset = train_val_dataset.take(train_size).cache().batch(batch_size)
+val_dataset = train_val_dataset.skip(train_size).take(val_size).cache().batch(batch_size)
+test_dataset = read_tfrecord(tfrecord_filename_test).shuffle(buffer_size=100000, seed=42).batch(batch_size)
 
 # %% Cell 3
 # Shared ShuffleNetV2 model definition
-from pathlib import Path
-import sys
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-from smd_recognition.shufflenetv2 import ShuffleNet
+from smd.shufflenetv2 import ShuffleNet
 
 # %% Cell 4
 # ShuffleNet V1 训练

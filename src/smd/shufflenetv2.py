@@ -1,3 +1,10 @@
+"""
+文件功能：定义用于表面微放电图像识别的轻量级 ShuffleNetV2 模型。
+代码分布：ChannelShuffle 实现通道混洗；ShuffleUnitV2 实现基本单元；ShuffleNet 组装完整分类网络。
+整理思路：模型结构只在这里维护一次，训练、量化、评估脚本都从本文件导入，避免结构不一致。
+使用方法：from smd.shufflenetv2 import ShuffleNet，然后调用 ShuffleNet(im_height=150, im_width=150, class_num=2)。
+"""
+
 import tensorflow as tf
 from tensorflow.keras.layers import (
     BatchNormalization,
@@ -16,6 +23,8 @@ from tensorflow.keras.models import Model
 
 @tf.keras.utils.register_keras_serializable(package="Custom")
 class ChannelShuffle(tf.keras.layers.Layer):
+    """ShuffleNetV2 的通道混洗层，用于增强不同通道组之间的信息交换。"""
+
     def __init__(self, groups=2, **kwargs):
         super().__init__(**kwargs)
         self.groups = groups
@@ -70,6 +79,7 @@ def dwconv_bn(x, kernel_size=3, strides=1, name=None):
 
 
 def ShuffleUnitV2(x, out_channels, strides=1, name=None):
+    """构建一个 ShuffleNetV2 基本单元。"""
     prefix = f"{name}_" if name else ""
     in_channels = int(x.shape[-1])
 
@@ -109,6 +119,7 @@ def ShuffleNet(
     groups=2,
     width_multiplier=1,
 ):
+    """构建适用于 150x150 SMD 图像二分类任务的 ShuffleNetV2 模型。"""
     def round_channels(ch):
         return max(int(round(ch / 2) * 2), 2)
 

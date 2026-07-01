@@ -1,4 +1,11 @@
 """
+文件功能：OpenMV 端实时图像分类主程序，用于加载 TFLite 模型并在摄像头画面上显示识别结果。
+代码分布：前半部分初始化摄像头、LCD 和模型，主循环中采集图像、执行分类、绘制 FPS 与检测框。
+整理思路：该文件面向 OpenMV 固件运行，依赖 sensor、image、tf、pyb 等 OpenMV 模块，不在普通 Python 环境执行。
+使用方法：将本文件、openmv_my_LCD.py、.tflite 模型和 labels.txt 拷贝到 OpenMV 设备后运行。
+"""
+
+"""
  By: 28014 - 周五 3月 3 2023
 @author: Zn
 OpenMV脱机运行TFlite模型

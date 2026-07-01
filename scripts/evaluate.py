@@ -1,3 +1,10 @@
+"""
+文件功能：对训练好的模型进行测试集评估，计算准确率、混淆矩阵、ROC/AUC、F1 等指标。
+代码分布：先读取测试 TFRecord，再加载各模型，最后统一计算指标并绘图。
+整理思路：当前保留论文实验对比所需代码；ShuffleNetV2 的结构已抽到 src/smd/shufflenetv2.py，避免多处重复定义。
+使用方法：确认 models 目录中已有待评估模型后，运行 python scripts/evaluate.py。
+"""
+
 # Converted from 20260626testmodels-shufflenet-ROCcurve.ipynb
 # Edit paths before running on a new machine.
 
@@ -9,70 +16,32 @@ ROC曲线 混淆矩阵 AUC值等等
 '''
 
 # %% Cell 2
-#%% ModelEvaluation 部分
-import tensorflow as tf
-import numpy as np
-from sklearn.metrics import confusion_matrix, roc_curve, auc,roc_auc_score
-from tensorflow.keras.models import load_model
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MultipleLocator
 import math
+from pathlib import Path
+import sys
 
-# %% Cell 3
-## 读取 TFRecord 文件
-# tfrecord_filename_train_Original = 'SMD_data/SMD_TFRecord/image_SMD_150_train_20241209.tfrecords'
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+from matplotlib.ticker import MultipleLocator
+from sklearn.metrics import auc, confusion_matrix, roc_auc_score, roc_curve
+from tensorflow.keras.models import load_model
+
+sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+from smd.dataset import read_tfrecord
+
+# 读取 TFRecord 文件；解析逻辑统一放在 src/smd/dataset.py。
 tfrecord_filename_train_Augmented = 'SMD_data/SMD_TFRecord/image_SMD_150_train_20241209_Augmented.tfrecords'
 tfrecord_filename_test = 'SMD_data/SMD_TFRecord/image_SMD_150_test_20241209.tfrecords'
 batch_size = 32
 num_samples = 3926*2*8
 train_size = int(3926*0.6*2*8)
 val_size = int(3926*0.2*2*8)
-# Create a dictionary describing the features.
-def _parse_function(example_proto):
 
-    feature_description = {
-        'height': tf.io.FixedLenFeature([], tf.int64),
-        'width': tf.io.FixedLenFeature([], tf.int64),
-        'channel': tf.io.FixedLenFeature([], tf.int64),
-        'label': tf.io.FixedLenFeature([], tf.int64),
-        'image_raw': tf.io.FixedLenFeature([], tf.string),
-    }
-    features = tf.io.parse_single_example(example_proto, feature_description)
-    #image = tf.io.decode_jpeg(features['image_raw'], channels=3)
-    image_raw = tf.io.decode_raw(features["image_raw"], out_type=tf.uint8)
-    image_raw = tf.cast(image_raw, tf.float32) 
-    height = features["height"]
-    width = features["width"]
-    channel = features["channel"]
-# 我们将数据转化为 bytes, 再转化为张量, 会转化为一个 1维数据
-# 这里提前保存 shape 信息，转化回来
-    image_raw = tf.reshape(image_raw, [height, width, channel])
-    label = features["label"]
-    image_raw = tf.cast(image_raw,tf.float32)/255.0
-    label = tf.cast(label, tf.int32)
-    label = tf.convert_to_tensor(label) # 转换成张量
-    label = tf.one_hot(label, depth=2) #one-hot
-    return image_raw, label
-# raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_train_Original)
-# parsed_image_dataset = raw_image_dataset.map(_parse_function)
-# train_val_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-# #train_val_dataset = train_val_dataset.shuffle(buffer_size=(train_size+val_size), seed=42)
-# train_dataset = train_val_dataset.take(train_size).cache()
-# val_dataset = train_val_dataset.skip(train_size).take(val_size).cache()
-raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_train_Augmented)
-parsed_image_dataset = raw_image_dataset.map(_parse_function)
-train_val_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-train_dataset = train_val_dataset.take(train_size).cache()
-val_dataset = train_val_dataset.skip(train_size).take(val_size).cache()
-raw_image_dataset = tf.data.TFRecordDataset(tfrecord_filename_test)
-parsed_image_dataset = raw_image_dataset.map(_parse_function)
-test_dataset = parsed_image_dataset.shuffle(buffer_size=100000, seed=42) #buffer_size需要大于数据量
-
-train_dataset = train_dataset.batch(batch_size)
-val_dataset = val_dataset.batch(batch_size)
-test_dataset = test_dataset.batch(batch_size)
-# for image_features in train_dataset:
-#     print(image_features)
+train_val_dataset = read_tfrecord(tfrecord_filename_train_Augmented).shuffle(buffer_size=100000, seed=42)
+train_dataset = train_val_dataset.take(train_size).cache().batch(batch_size)
+val_dataset = train_val_dataset.skip(train_size).take(val_size).cache().batch(batch_size)
+test_dataset = read_tfrecord(tfrecord_filename_test).shuffle(buffer_size=100000, seed=42).batch(batch_size)
 
 # %% Cell 4
 from tensorflow.keras.layers import Conv2D,MaxPool2D,Dropout,Flatten,Dense,concatenate,Input
@@ -554,11 +523,7 @@ def VisionTransformer(input_shape = [224, 224], patch_size = 16, num_layers = 12
 
 # %% Cell 6
 # Shared ShuffleNetV2 model definition
-from pathlib import Path
-import sys
-
-sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
-from smd_recognition.shufflenetv2 import ShuffleNet
+from smd.shufflenetv2 import ShuffleNet
 
 # %% Cell 7
 #%% 加载以上训练的模型

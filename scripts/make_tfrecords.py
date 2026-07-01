@@ -1,3 +1,10 @@
+"""
+文件功能：将表面微放电图像数据整理为 TFRecord 文件，并生成增强后的训练样本。
+代码分布：前半部分读取原始图片和标签，中间定义图像增强方法，后半部分按训练集/测试集写入 TFRecord。
+整理思路：脚本只作为数据准备入口；通用的 TFRecord 读取逻辑放在 src/smd/dataset.py 中，避免训练和评估重复解析代码。
+使用方法：准备好本地 SMD_data 目录后，按实际路径修改本文件中的数据路径，然后运行 python scripts/make_tfrecords.py。
+"""
+
 # Converted from 20241209SMD_to_TFRecord_Augmented.ipynb
 # Edit paths before running on a new machine.
 
