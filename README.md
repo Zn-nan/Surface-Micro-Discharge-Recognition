@@ -1,6 +1,6 @@
 # Surface Micro-Discharge Recognition
 
-This repository contains code for visible-light image recognition of surface micro-discharge (SMD) modes using a lightweight ShuffleNetV2 model.
+Code for visible-light image recognition of atmospheric-pressure surface micro-discharge (SMD) modes using a lightweight ShuffleNetV2 model.
 
 ## Paper
 
@@ -10,13 +10,34 @@ This repository contains code for visible-light image recognition of surface mic
 
 DOI: [10.21227/ecye-se77](https://dx.doi.org/10.21227/ecye-se77)
 
+The dataset contains visible-light images of SMD plasmas collected under different operating conditions, including applied voltages, dielectric materials, dielectric thicknesses, and camera exposure times.
+
+Labels are determined by synchronized Fourier Transform Infrared (FTIR) measurements of gaseous products, rather than manual visual inspection. This provides objective ground-truth labels for supervised image classification.
+
+| Class | Images |
+|---|---:|
+| Ozone | 3,926 |
+| Non-Ozone | 3,926 |
+| Total | 7,852 |
+
+### Label Definition
+
+- `Ozone`: ozone (O3) is the dominant gaseous product, and nitrogen oxides (NO or NO2) are absent.
+- `Non-Ozone`: NOx species are detected during the initial discharge stage, including transition mode and NOx mode.
+
 Download the dataset from IEEE DataPort and place local TFRecord files under:
 
 ```text
 SMD_data/SMD_TFRecord/
 ```
 
-## Structure
+## Experimental Setup
+
+The SMD device consists of a powered copper electrode, a dielectric barrier, and a grounded steel mesh electrode. A high-voltage AC power supply operating at 8 kHz was used to generate the discharge.
+
+Visible-light discharge images were captured in a darkroom using a Nikon D750 digital camera. Gaseous products were measured using a Bruker VERTEX 70 FTIR spectrometer to determine the corresponding discharge mode labels.
+
+## Repository Structure
 
 ```text
 .
@@ -47,16 +68,27 @@ SMD_data/SMD_TFRecord/
 ## Code Layout
 
 - `src/smd/config.py`: common paths, image size, class count, and model filenames.
-- `src/smd/dataset.py`: TFRecord parsing and dataset loading utilities.
+- `src/smd/dataset.py`: shared TFRecord parsing and dataset loading utilities.
 - `src/smd/shufflenetv2.py`: shared ShuffleNetV2 model definition.
-- `scripts/`: runnable experiment scripts.
-- `device/`: OpenMV deployment code.
+- `scripts/`: runnable data preparation, training, export, and evaluation scripts.
+- `device/`: OpenMV deployment code for edge inference.
 - `models/`: trained Keras and TensorFlow Lite model files.
 
 ## Requirements
 
 ```bash
 pip install -r requirements.txt
+```
+
+Main dependencies:
+
+```text
+tensorflow==2.6.0
+numpy
+opencv-python
+matplotlib
+scikit-learn
+pillow
 ```
 
 ## Usage
@@ -90,6 +122,10 @@ Evaluate models:
 ```bash
 python scripts/evaluate.py
 ```
+
+## Applications
+
+This dataset and code can support research on SMD mode recognition, atmospheric-pressure plasma diagnostics, image classification, lightweight neural networks, edge AI, and intelligent plasma monitoring.
 
 ## Notes
 
